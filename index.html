@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer v6</title>
+    <title>SVG Sticker Designer v7</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
@@ -12,8 +12,8 @@
         .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
         .controls { display: flex; flex-direction: column; gap: 15px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
+        label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; transition: 0.2s; }
         input:focus { border-color: var(--accent); }
         button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
         button:active { transform: scale(0.96); }
@@ -26,7 +26,7 @@
     <div class="controls">
         <div class="group">
             <label>Texto del Sticker</label>
-            <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="ALEXANDER">
+            <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="IVÁN">
         </div>
         <div class="group">
             <label>Tipografía</label>
@@ -47,6 +47,14 @@
     const preview = document.getElementById('preview');
     const colorsRainbow = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
 
+    // FUNCIÓN DE KERNING: Calcula peso angular según la letra
+    function getCharWeight(char) {
+        if (['I', '1', '.', ':', ' '].includes(char)) return 0.4; // Muy estrecho
+        if (['M', 'W'].includes(char)) return 1.1; // Muy ancho
+        if (['J', 'L', 'F', 'r', 't'].includes(char)) return 0.7; // Algo estrecho
+        return 0.85; // Estándar para Fredoka/Montserrat
+    }
+
     function getSVG() {
         const nameText = nameInp.value.toUpperCase().trim() || "PAZ";
         const selectedFont = fontInp.value;
@@ -57,17 +65,17 @@
         const svgH = 320;
         const centerX = svgW / 2;
         
-        // --- LÓGICA DE AJUSTE DINÁMICO ---
-        // 1. Tamaño de letra decrece ligeramente con la longitud
+        // --- LÓGICA ADAPTATIVA ---
         const fontSize = n > 8 ? 42 : 48;
-        
-        // 2. Espaciado (Kerning) decrece para mantener la unión
-        // Si es corto (3 letras) usa 0.045, si es largo (12 letras) baja a 0.035
-        const letterSpacing = Math.max(0.035, 0.050 - (n * 0.0015));
-        
-        // 3. Radio masivo para mantener la curva sutil
-        const radius = 800 + (n * 30);
+        const radius = 800 + (n * 35);
         const centerY = radius + 95; 
+
+        // 1. Calcular pesos y ancho angular total (Tighter bonding factor)
+        const charWeights = letters.map(getCharWeight);
+        const baseTightnessFactor = Math.max(0.028, 0.040 - (n * 0.0011)); // SUPER COMPACTO
+        const totalAngle = charWeights.reduce((a, b) => a + b, 0) * baseTightnessFactor;
+        
+        const startAngle = -(totalAngle / 2) - Math.PI/2;
 
         const defs = `
             <defs>
@@ -82,15 +90,15 @@
                     <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
                     <stop offset="80%" stop-color="white" stop-opacity="0"/>
                 </radialGradient>
-                <linearGradient id="rainbowLine" x1="0%" y1="0%" x2="100%" y2="0%">
-                    ${colorsRainbow.map((c, i) => `<stop offset="${(i/(colorsRainbow.length-1))*100}%" stop-color="${c}"/>`).join('')}
+                <linearGradient id="yellowOrangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#facc15"/>
+                    <stop offset="100%" stop-color="#f59e0b"/>
                 </linearGradient>
             </defs>
         `;
 
         let content = "";
-        const startAngle = -( (n - 1) * letterSpacing ) / 2 - Math.PI/2;
-
+        
         // Capas: Contorno -> Color -> Brillo
         const layers = [
             { stroke: 'black', width: 11, fill: 'none' },
@@ -100,8 +108,13 @@
 
         layers.forEach(layer => {
             content += `<g>`;
+            let currentAngle = startAngle;
+            
             letters.forEach((char, i) => {
-                const angle = startAngle + (i * letterSpacing);
+                const charWeight = charWeights[i];
+                // Posición angular: Usamos la mitad del peso de la letra actual + el acumulado
+                const angle = currentAngle + ( (charWeight * baseTightnessFactor) / 2 );
+                
                 const x = centerX + radius * Math.cos(angle);
                 const y = centerY + radius * Math.sin(angle);
                 const rotation = (angle + Math.PI/2) * (180 / Math.PI);
@@ -117,12 +130,15 @@
                           style="font-family:${selectedFont}; font-weight:900; font-size:${fontSize}px; text-anchor:middle; dominant-baseline:middle;">
                         ${char}
                     </text>`;
+                
+                // Avanzamos el ángulo para la siguiente letra
+                currentAngle += (charWeight * baseTightnessFactor);
             });
             content += `</g>`;
         });
 
-        // DECORACIÓN: Ajustada a la nueva escala
-        const arcWidth = Math.min(220, (n * 20) + 30);
+        // DECORACIÓN: Proporcional a los nuevos pesos
+        const arcWidth = Math.min(220, (totalAngle * 100) + 20); // Basado en el ancho angular real
         const arcY = 148; 
         const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 12} ${centerX + arcWidth} ${arcY}`;
 
@@ -133,11 +149,11 @@
         };
 
         const decorations = `
-            <path d="${arcPath}" fill="none" stroke="url(#rainbowLine)" stroke-width="6" stroke-linecap="round" />
-            ${drawStar(centerX - arcWidth - 10, arcY - 2, 6, -15)} 
-            ${drawStar(centerX - arcWidth - 18, arcY - 12, 3.5, -10)}
-            ${drawStar(centerX + arcWidth + 10, arcY - 2, 6, 15)}
-            ${drawStar(centerX + arcWidth + 18, arcY - 12, 3.5, 10)}
+            <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="6" stroke-linecap="round" />
+            ${drawStar(centerX - arcWidth - 10, arcY - 2, 5.5, -15)} 
+            ${drawStar(centerX - arcWidth - 17, arcY - 10, 3.2, -10)}
+            ${drawStar(centerX + arcWidth + 10, arcY - 2, 5.5, 15)}
+            ${drawStar(centerX + arcWidth + 17, arcY - 10, 3.2, 10)}
         `;
 
         return `
