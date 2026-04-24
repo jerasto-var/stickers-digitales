@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer v8</title>
+    <title>SVG Sticker Designer v9</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
@@ -46,7 +46,7 @@
     const colorsRainbow = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
 
     function getCharWeight(char) {
-        if (['I', '1', 'Í'].includes(char)) return 0.35; // Mantener I cerrada
+        if (['I', '1', 'Í'].includes(char)) return 0.38; // Ajuste fino para la I
         if (['M', 'W'].includes(char)) return 1.1;
         return 0.85;
     }
@@ -61,13 +61,13 @@
         const svgH = 320;
         const centerX = svgW / 2;
         
-        // Calibración de tamaño y radio
-        const fontSize = n > 8 ? 40 : 46;
+        const fontSize = n > 8 ? 42 : 48;
         const radius = 900 + (n * 35);
         const centerY = radius + 95; 
 
-        // AJUSTE: Aumentamos ligeramente la separación base (era 0.028-0.040)
-        const baseTightnessFactor = Math.max(0.038, 0.052 - (n * 0.0011)); 
+        // CALIBRACIÓN V9: El punto dulce entre la v7 y la v8
+        const baseTightnessFactor = Math.max(0.032, 0.044 - (n * 0.0011)); 
+        
         const charWeights = letters.map(getCharWeight);
         const totalAngle = charWeights.reduce((a, b) => a + b, 0) * baseTightnessFactor;
         const startAngle = -(totalAngle / 2) - Math.PI/2;
@@ -121,8 +121,8 @@
             content += `</g>`;
         });
 
-        // DECORACIÓN: Arco más largo (+50px) y centrado
-        const arcWidth = (totalAngle * 120) + 50; 
+        // ARCO DECORATIVO: Proporcional a la palabra + margen fijo para que siempre sea mayor
+        const arcWidth = (totalAngle * 135) + 35; 
         const arcY = 148; 
         const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 12} ${centerX + arcWidth} ${arcY}`;
 
@@ -134,10 +134,10 @@
 
         const decorations = `
             <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="6" stroke-linecap="round" />
-            ${drawStar(centerX - arcWidth - 12, arcY - 2, 6, -15)} 
-            ${drawStar(centerX - arcWidth - 20, arcY - 12, 3.5, -10)}
-            ${drawStar(centerX + arcWidth + 12, arcY - 2, 6, 15)}
-            ${drawStar(centerX + arcWidth + 20, arcY - 12, 3.5, 10)}
+            ${drawStar(centerX - arcWidth - 10, arcY - 2, 5.5, -15)} 
+            ${drawStar(centerX - arcWidth - 17, arcY - 10, 3.2, -10)}
+            ${drawStar(centerX + arcWidth + 10, arcY - 2, 5.5, 15)}
+            ${drawStar(centerX + arcWidth + 17, arcY - 10, 3.2, 10)}
         `;
 
         return `
