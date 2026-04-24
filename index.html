@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer v13</title>
+    <title>SVG Sticker Designer v14</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .app { width: 100%; max-width: 480px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
+        .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 320px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
         .controls { display: flex; flex-direction: column; gap: 15px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        input { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--accent); }
+        input { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
         button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
         button:active { transform: scale(0.96); }
     </style>
@@ -28,7 +27,7 @@
             <label>Texto del Sticker</label>
             <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="IVÁN">
         </div>
-        <button onclick="download()">Descargar SVG Sticker</button>
+        <button onclick="download()">Descargar SVG Final</button>
     </div>
 </div>
 
@@ -45,20 +44,18 @@
 
     function getSVG() {
         const nameText = nameInp.value.toUpperCase().trim() || "PAZ";
-        // Usamos una pila de fuentes de sistema ultra-compatibles
-        const systemFonts = "'Montserrat', 'Arial Black', 'Arial', sans-serif";
+        const systemFonts = "'Montserrat', 'Arial Black', sans-serif";
         const letters = nameText.split('');
         const n = letters.length;
         
-        const svgW = 500;
-        const svgH = 340; // Ligeramente más alto para el nuevo adorno
+        const svgW = 550; // Un poco más ancho para los nuevos adornos
+        const svgH = 340;
         const centerX = svgW / 2;
         
         const fontSize = n > 8 ? 42 : 48;
         const radius = 900 + (n * 35);
         const centerY = radius + 95; 
 
-        // Kerning original que te gusta
         const baseTightnessFactor = Math.max(0.032, 0.044 - (n * 0.0011)); 
         const charWeights = letters.map(getCharWeight);
         const totalAngle = charWeights.reduce((a, b) => a + b, 0) * baseTightnessFactor;
@@ -73,10 +70,6 @@
                     <feComposite in2="offsetBlur" operator="in" result="shadow"/>
                     <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
                 </filter>
-                <radialGradient id="balloonGlow" cx="50%" cy="30%" r="50%">
-                    <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
-                    <stop offset="80%" stop-color="white" stop-opacity="0"/>
-                </radialGradient>
                 <linearGradient id="yellowOrangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stop-color="#facc15"/>
                     <stop offset="100%" stop-color="#f59e0b"/>
@@ -87,8 +80,7 @@
         let content = "";
         const layers = [
             { stroke: 'black', width: 11, fill: 'none' },
-            { stroke: 'none', width: 0, fill: 'auto' },
-            { stroke: 'none', width: 0, fill: 'url(#balloonGlow)' }
+            { stroke: 'none', width: 0, fill: 'auto' }
         ];
 
         layers.forEach(layer => {
@@ -113,8 +105,8 @@
             content += `</g>`;
         });
 
-        // DECORACIÓN SÚPER ANCHA (+120px)
-        const arcWidth = (totalAngle * 180) + 120; 
+        // ARCO SÚPER ANCHO
+        const arcWidth = (totalAngle * 180) + 125; 
         const arcY = 150; 
         const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 15} ${centerX + arcWidth} ${arcY}`;
 
@@ -124,25 +116,26 @@
                      fill="#facc15" stroke="black" stroke-width="1.2" stroke-linejoin="round" transform="rotate(${rotate}, ${x}, ${y})" />`;
         };
 
-        // Función para dibujar la filigrana espiral
-        const drawFiligree = (x, y, isRight = false) => {
+        // NUEVO: LAZO ABIERTO (FILIGRANA BÉZIER)
+        const drawOpenLoop = (x, y, isRight = false) => {
             const scaleX = isRight ? 1 : -1;
-            return `<g transform="translate(${x}, ${y}) scale(${scaleX}, 1) rotate(-15)">
-                <path d="M 0 0 C 10 -15 30 10 20 25 C 10 40 -10 15 0 0 Z" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"/>
-                <circle cx="20" cy="-20" r="3" fill="#ffd13e" stroke="black" stroke-width="1.2"/>
+            return `<g transform="translate(${x}, ${y}) scale(${scaleX}, 1)">
+                <path d="M 0 0 C 15 -10, 35 5, 25 20 C 18 30, 5 25, 8 12" 
+                      fill="none" stroke="black" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="15" cy="-12" r="3" fill="#facc15" stroke="black" stroke-width="1"/>
             </g>`;
         };
 
         const decorations = `
             <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="8" stroke-linecap="round" />
             
-            ${drawFiligree(centerX - arcWidth, arcY - 8)}
-            ${drawFiligree(centerX + arcWidth, arcY - 8, true)}
+            ${drawOpenLoop(centerX - arcWidth, arcY - 5)}
+            ${drawOpenLoop(centerX + arcWidth, arcY - 5, true)}
 
-            ${drawStar(centerX - arcWidth - 30, arcY - 18, 6.5, -15)} 
-            ${drawStar(centerX - arcWidth - 40, arcY - 28, 3.8, -10)}
-            ${drawStar(centerX + arcWidth + 30, arcY - 18, 6.5, 15)}
-            ${drawStar(centerX + arcWidth + 40, arcY - 28, 3.8, 10)}
+            ${drawStar(centerX - arcWidth - 35, arcY - 22, 6.5, -15)} 
+            ${drawStar(centerX - arcWidth - 45, arcY - 32, 3.8, -10)}
+            ${drawStar(centerX + arcWidth + 35, arcY - 22, 6.5, 15)}
+            ${drawStar(centerX + arcWidth + 45, arcY - 32, 3.8, 10)}
         `;
 
         return `
@@ -156,13 +149,11 @@
 
     function update() { preview.innerHTML = getSVG(); }
     function download() {
-        const svgContent = getSVG();
-        const blob = new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"});
+        const blob = new Blob([getSVG()], {type: "image/svg+xml;charset=utf-8"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url; a.download = `${nameInp.value || 'sticker'}.svg`;
         a.click();
-        URL.revokeObjectURL(url);
     }
 
     nameInp.addEventListener('input', update);
