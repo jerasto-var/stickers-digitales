@@ -3,242 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Bubble Sticker Designer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <title>SVG Sticker Designer v8</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --accent: #ff9f43;
-            --text-main: #1e293b;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 480px;
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 24px;
-            color: #333;
-            opacity: 0.8;
-        }
-
-        .preview-box {
-            width: 100%;
-            background: #eee;
-            background-image: radial-gradient(#ccc 1px, transparent 1px);
-            background-size: 20px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            min-height: 250px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        input[type="text"] {
-            padding: 14px 18px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--accent);
-        }
-
-        .btn-download {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 16px 25px;
-            border-radius: 14px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.1s;
-        }
-
-        .btn-download:active {
-            transform: scale(0.98);
-        }
-
-        svg {
-            max-width: 100%;
-            height: auto;
-        }
+        :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .app { width: 100%; max-width: 480px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
+        .controls { display: flex; flex-direction: column; gap: 15px; }
+        .group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
+        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>SVG Sticker Maker v2</h1>
-    
-    <div class="preview-box" id="svgContainer">
+<div class="app">
+    <div class="preview" id="preview"></div>
+    <div class="controls">
+        <div class="group">
+            <label>Texto del Sticker</label>
+            <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="IVÁN">
         </div>
-
-    <div class="input-group">
-        <input type="text" id="nombre" placeholder="Tu nombre aquí..." maxlength="12" value="IVÁN">
+        <div class="group">
+            <label>Tipografía</label>
+            <select id="fontInp">
+                <option value="'Fredoka One', cursive" selected>Burbuja (Fredoka)</option>
+                <option value="'Luckiest Guy', cursive">Comic (Luckiest Guy)</option>
+                <option value="'Montserrat', sans-serif">Moderno (Montserrat)</option>
+                <option value="'Pacifico', cursive">Cursiva (Pacifico)</option>
+            </select>
+        </div>
+        <button onclick="download()">Descargar SVG</button>
     </div>
-
-    <button class="btn-download" id="downloadBtn">Descargar SVG Sticker</button>
 </div>
 
 <script>
-    const inputNombre = document.getElementById('nombre');
-    const container = document.getElementById('svgContainer');
-    const downloadBtn = document.getElementById('downloadBtn');
+    const nameInp = document.getElementById('nameInp');
+    const fontInp = document.getElementById('fontInp');
+    const preview = document.getElementById('preview');
+    const colorsRainbow = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
 
-    // Paleta de colores para las letras, inspirada en la imagen de muestra
-    const colors = ["#ff9f43", "#ffcd57", "#1dd1a1", "#2e86de", "#8b5cf6", "#e17055"];
+    function getCharWeight(char) {
+        if (['I', '1', 'Í'].includes(char)) return 0.35; // Mantener I cerrada
+        if (['M', 'W'].includes(char)) return 1.1;
+        return 0.85;
+    }
 
-    function generateSVGString() {
-        const textoIn = inputNombre.value || "PAZ";
-        const totalLetters = textoIn.length;
+    function getSVG() {
+        const nameText = nameInp.value.toUpperCase().trim() || "PAZ";
+        const selectedFont = fontInp.value;
+        const letters = nameText.split('');
+        const n = letters.length;
         
-        // --- Lógica avanzada de espaciado y arcos ---
-        // Ajustamos los pesos de cada letra para el kerning inteligente
-        const letterWidths = textoIn.split('').map(char => {
-            if (char === 'I' || char === 'Í' || char === 'l' || char === '1') return 0.6; // Estrechas
-            if (char === 'M' || char === 'W' || char === 'MÍ') return 1.1; // Anchas
-            return 0.8; // Estándar
-        });
+        const svgW = 500;
+        const svgH = 320;
+        const centerX = svgW / 2;
         
-        // Factor de espaciado base (ligeramente separado)
-        const separationFactor = 1.6;
-        
-        // Multiplicador de longitud del adorno (mucho más largo que la palabra)
-        const pedestalLengthMultiplier = Math.max(1.5, 2.0 / (totalLetters / 10)); // Mínimo 1.5, proporcional
+        // Calibración de tamaño y radio
+        const fontSize = n > 8 ? 40 : 46;
+        const radius = 900 + (n * 35);
+        const centerY = radius + 95; 
 
-        // Definiciones de filtros y gradientes
+        // AJUSTE: Aumentamos ligeramente la separación base (era 0.028-0.040)
+        const baseTightnessFactor = Math.max(0.038, 0.052 - (n * 0.0011)); 
+        const charWeights = letters.map(getCharWeight);
+        const totalAngle = charWeights.reduce((a, b) => a + b, 0) * baseTightnessFactor;
+        const startAngle = -(totalAngle / 2) - Math.PI/2;
+
         const defs = `
             <defs>
                 <filter id="stickerShadow" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                    <feOffset dx="0" dy="5" result="offsetBlur"/>
-                    <feFlood flood-color="black" flood-opacity="0.3"/>
+                    <feOffset dx="0" dy="4" result="offsetBlur"/>
+                    <feFlood flood-color="black" flood-opacity="0.2"/>
                     <feComposite in2="offsetBlur" operator="in" result="shadow"/>
                     <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
                 </filter>
-                <linearGradient id="bubbleHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="white" stop-opacity="0.6"/>
-                    <stop offset="30%" stop-color="white" stop-opacity="0"/>
+                <radialGradient id="balloonGlow" cx="50%" cy="30%" r="50%">
+                    <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
+                    <stop offset="80%" stop-color="white" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="yellowOrangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#facc15"/>
+                    <stop offset="100%" stop-color="#f59e0b"/>
                 </linearGradient>
             </defs>
         `;
 
-        // Generación de capas de texto (Contorno blanco -> Color -> Sombra interior -> Brillo)
-        let lettersGroup = `<g id="letras" filter="url(#stickerShadow)">`;
-        
-        const totalWidth = letterWidths.reduce((a, b) => a + b, 0) * 60; // Ancho estimado total
-        const startX = (500 - totalWidth) / 2;
+        let content = "";
+        const layers = [
+            { stroke: 'black', width: 11, fill: 'none' },
+            { stroke: 'none', width: 0, fill: 'auto' },
+            { stroke: 'none', width: 0, fill: 'url(#balloonGlow)' }
+        ];
 
-        let currentX = startX;
-        for (let i = 0; i < totalLetters; i++) {
-            const letter = textoIn[i].toUpperCase();
-            const color = colors[i % colors.length];
-            
-            const w = letterWidths[i] * 60;
-            const x = currentX + (w / 2); // Posición centrada para el text-anchor:middle
-            
-            // Unificamos el posicionamiento de cada letra en capas
-            lettersGroup += `
-                <g id="letra_${i}" transform="translate(${x} 80)">
-                    <text x="0" y="0" class="txt" fill="white" stroke="white" stroke-width="24" stroke-linejoin="round">${letter}</text>
-                    <text x="0" y="0" class="txt" fill="none" stroke="#222" stroke-width="12" stroke-linejoin="round">${letter}</text>
-                    <text x="0" y="0" class="txt" fill="${color}">${letter}</text>
-                    <text x="0" y="0" class="txt" fill="url(#bubbleHighlight)" style="opacity: 0.35;">${letter}</text>
-                </g>
-            `;
-            
-            // Avanzamos currentX según el ancho de la letra y el factor de separación
-            currentX += w * separationFactor;
-        }
-        lettersGroup += `</g>`;
+        layers.forEach(layer => {
+            content += `<g>`;
+            let currentAngle = startAngle;
+            letters.forEach((char, i) => {
+                const charWeight = charWeights[i];
+                const angle = currentAngle + ( (charWeight * baseTightnessFactor) / 2 );
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                const rotation = (angle + Math.PI/2) * (180 / Math.PI);
+                const fillColor = layer.fill === 'auto' ? colorsRainbow[i % colorsRainbow.length] : layer.fill;
+                
+                content += `
+                    <text x="${x}" y="${y}" transform="rotate(${rotation}, ${x}, ${y})"
+                          fill="${fillColor}" stroke="${layer.stroke}" stroke-width="${layer.width}" stroke-linejoin="round"
+                          style="font-family:${selectedFont}; font-weight:900; font-size:${fontSize}px; text-anchor:middle; dominant-baseline:middle;">
+                        ${char}
+                    </text>`;
+                currentAngle += (charWeight * baseTightnessFactor);
+            });
+            content += `</g>`;
+        });
 
-        // Composición final
-        // Adorno naranja mucho más largo y decoraciones
-        const finalW = Math.max(500, (currentX + totalWidth / 2) * pedestalLengthMultiplier);
-        
-        // Decoraciones (pedestal y filigrana)
-        const pedestalArcW = finalW * 0.75; // Ancho del arco naranja
-        
+        // DECORACIÓN: Arco más largo (+50px) y centrado
+        const arcWidth = (totalAngle * 120) + 50; 
+        const arcY = 148; 
+        const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 12} ${centerX + arcWidth} ${arcY}`;
+
+        const drawStar = (x, y, size, rotate = 0) => {
+            const s = size;
+            return `<polygon points="${x},${y-s} ${x+s*0.25},${y-s*0.25} ${x+s},${y-s*0.25} ${x+s*0.4},${y+s*0.25} ${x+s*0.6},${y+s} ${x},${y+s*0.5} ${x-s*0.6},${y+s} ${x-s*0.4},${y+s*0.25} ${x-s},${y-s*0.25} ${x-s*0.25},${y-s*0.25}" 
+                     fill="#facc15" stroke="black" stroke-width="1.2" stroke-linejoin="round" transform="rotate(${rotate}, ${x}, ${y})" />`;
+        };
+
+        const decorations = `
+            <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="6" stroke-linecap="round" />
+            ${drawStar(centerX - arcWidth - 12, arcY - 2, 6, -15)} 
+            ${drawStar(centerX - arcWidth - 20, arcY - 12, 3.5, -10)}
+            ${drawStar(centerX + arcWidth + 12, arcY - 2, 6, 15)}
+            ${drawStar(centerX + arcWidth + 20, arcY - 12, 3.5, 10)}
+        `;
+
         return `
-            <svg id="exportedSvg" width="${finalW}" height="280" viewBox="0 0 ${finalW} 280" xmlns="http://www.w3.org/2000/svg">
+            <svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" filter="url(#stickerShadow)">
                 ${defs}
-                <style>
-                    .txt { font-family: 'Luckiest Guy', cursive; font-size: 70px; text-anchor: middle; dominant-baseline: middle; }
-                </style>
-                
-                ${lettersGroup}
-                
-                <g id="adorno" transform="translate(${finalW / 2} 180)">
-                    <path d="M ${-pedestalArcW/2} 0 Q 0 40 ${pedestalArcW/2} 0" fill="none" stroke="#ff9f43" stroke-width="12" stroke-linecap="round" />
-                    
-                    <g transform="translate(${-pedestalArcW/2 - 30} -10) scale(-1 1)">
-                        <path d="M 0 0 C 10 -15 30 10 20 25 C 10 40 -10 15 0 0 Z" fill="none" stroke="#222" stroke-width="2.5" />
-                        <circle cx="20" cy="-20" r="3" fill="#ffd13e" />
-                    </g>
-                    
-                    <g transform="translate(${pedestalArcW/2 + 30} -10)">
-                        <path d="M 0 0 C 10 -15 30 10 20 25 C 10 40 -10 15 0 0 Z" fill="none" stroke="#222" stroke-width="2.5" />
-                        <circle cx="20" cy="-20" r="3" fill="#222" style="opacity: 0.5;" />
-                    </g>
-                </g>
+                ${content}
+                ${decorations}
             </svg>
         `.trim();
     }
 
-    function updatePreview() {
-        container.innerHTML = generateSVGString();
-    }
-
-    function downloadSVG() {
-        const svgData = generateSVGString();
-        const blob = new Blob([svgData], {type: "image/svg+xml;charset=utf-8"});
+    function update() { preview.innerHTML = getSVG(); }
+    function download() {
+        const blob = new Blob([getSVG()], {type: "image/svg+xml;charset=utf-8"});
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${inputNombre.value || 'sticker'}.svg`;
-        link.click();
-        URL.revokeObjectURL(url);
+        const a = document.createElement("a");
+        a.href = url; a.download = `${nameInp.value || 'sticker'}.svg`;
+        a.click();
     }
 
-    inputNombre.addEventListener('input', updatePreview);
-    downloadBtn.addEventListener('click', downloadSVG);
-
-    // Inicializar
-    updatePreview();
+    [nameInp, fontInp].forEach(el => el.addEventListener('input', update));
+    update();
 </script>
 
 </body>
