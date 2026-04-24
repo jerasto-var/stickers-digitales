@@ -11,7 +11,7 @@
         .app { width: 100%; max-width: 450px; background: var(--card); padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .preview { background: #eee; background-image: radial-gradient(#d1d1d1 1px, transparent 1px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 20px; min-height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .controls { display: flex; flex-direction: column; gap: 12px; }
-        input, select { padding: 12px; border-radius: 10px; border: 2px solid #ddd; font-size: 16px; outline: none; }
+        input { padding: 12px; border-radius: 10px; border: 2px solid #ddd; font-size: 16px; outline: none; }
         .row { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 15px; border-radius: 10px; }
         button { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
         svg { filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
@@ -23,74 +23,90 @@
     <div class="preview" id="preview"></div>
     
     <div class="controls">
-        <input type="text" id="nameInp" placeholder="Nombre..." maxlength="12" value="MATÍAS">
+        <input type="text" id="nameInp" placeholder="Nombre..." maxlength="12" value="PAZ">
         
-        <div class="row">
-            <span>Color</span>
-            <input type="color" id="colorInp" value="#ff4757">
-        </div>
-
-        <select id="styleInp">
-            <option value="balloon">Efecto Globo (Sticker)</option>
-            <option value="outline">Contorno Simple</option>
-        </select>
-
         <button onclick="download()">Descargar SVG</button>
     </div>
 </div>
 
 <script>
     const nameInp = document.getElementById('nameInp');
-    const colorInp = document.getElementById('colorInp');
-    const styleInp = document.getElementById('styleInp');
     const preview = document.getElementById('preview');
 
     function getSVG() {
-        const name = nameInp.value.toUpperCase() || "NOMBRE";
-        const color = colorInp.value;
-        const isBalloon = styleInp.value === 'balloon';
+        const nameText = nameInp.value.toUpperCase() || "PAZ";
+        const letters = nameText.split('');
 
-        // Definición de filtros para el efecto "Globo"
+        // Paleta de colores para las estrellitas y las letras (arcoíris)
+        const colorsRainbow = ['#ff4757', '#ff9f43', '#feca57', '#1dd1a1', '#2e86de', '#574b90'];
+        const numColors = colorsRainbow.length;
+
+        // Definiciones de gradiente para el arco
         const defs = `
             <defs>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="2" result="blur"/>
-                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                <linearGradient id="arcoíris" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ff4757"/>
+                    <stop offset="20%" stop-color="#ff9f43"/>
+                    <stop offset="40%" stop-color="#feca57"/>
+                    <stop offset="60%" stop-color="#1dd1a1"/>
+                    <stop offset="80%" stop-color="#2e86de"/>
+                    <stop offset="100%" stop-color="#574b90"/>
+                </linearGradient>
+
+                <filter id="innerShadow">
+                  <feGaussianBlur stdDeviation="3" in="SourceAlpha"/>
+                  <feOffset dx="2" dy="2" result="offsetBlur"/>
+                  <feComposite in="SourceAlpha" in2="offsetBlur" operator="arithmetic" k1="0" k2="1" k3="-1" k4="0" result="shadow"/>
+                  <feColorMatrix type="matrix" in="shadow" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 0.2 0" result="coloredShadow"/>
+                  <feComposite in="coloredShadow" in2="SourceGraphic" operator="over"/>
                 </filter>
             </defs>
         `;
 
-        let content = "";
+        // Generación dinámica de letras y estrellitas/partículas multicolor
+        let lettersGroup = `<g filter="url(#innerShadow)">`;
+        let particlesGroup = `<g id="partículas">`;
+        
+        // El ancho estimado del texto para calcular el centro
+        const totalLettersWidth = letters.length * 60; // Ajuste para centrar
+        const startX = (500 - totalLettersWidth) / 2;
 
-        if (isBalloon) {
-            // EFECTO GLOBO (Capas de trazo redondeado)
-            content = `
-                <text x="50%" y="45%" class="txt" fill="white" stroke="white" stroke-width="22" stroke-linejoin="round">${name}</text>
-                <text x="50%" y="45%" class="txt" fill="none" stroke="#333" stroke-width="12" stroke-linejoin="round">${name}</text>
-                <text x="50%" y="45%" class="txt" fill="${color}">${name}</text>
-                <text x="50%" y="43%" class="txt" fill="white" style="opacity: 0.3; font-size: 65px;">${name}</text>
-                
-                <path d="M 150 135 Q 250 155 350 135" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" />
-                <circle cx="120" cy="110" r="4" fill="${color}" />
-                <circle cx="380" cy="100" r="3" fill="#ffd32a" />
-                <path d="M 110 130 Q 100 140 110 150" fill="none" stroke="#333" stroke-width="3" />
-            `;
-        } else {
-            // CONTORNO SIMPLE (Tu idea original)
-            content = `
-                <text x="50%" y="50%" class="txt" fill="none" stroke="${color}" stroke-width="14">${name}</text>
-                <text x="50%" y="50%" class="txt" fill="none" stroke="white" stroke-width="7">${name}</text>
-                <text x="50%" y="50%" class="txt" fill="${color}">${name}</text>
-            `;
+        for (let i = 0; i < letters.length; i++) {
+            const letter = letters[i];
+            const color = colorsRainbow[i % numColors];
+            
+            // X posición de la letra
+            const x = startX + (i * 65) + 30; // Posición centrada
+
+            // Letra sólida
+            lettersGroup += `<text x="${x}" y="38%" class="txt" fill="${color}">${letter}</text>`;
+            
+            // Partículas/Estrellitas: secuenciales, más abajo y alternadas
+            const isTop = i % 2 === 0;
+            const cy = isTop ? 100 : 120; // Alternadas para naturalidad
+            const cx = x; // Alineadas con la letra
+            particlesGroup += `<circle cx="${cx}" cy="${cy}" r="4" fill="${color}" style="opacity: 0.8;" />`;
         }
+        
+        // Cerrar grupos
+        lettersGroup += `</g>`;
+        particlesGroup += `</g>`;
 
+        // Composición final
         return `
             <svg id="svgOut" width="500" height="250" viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg">
                 ${defs}
                 <style>
-                    .txt { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 70px; text-anchor: middle; dominant-baseline: middle; }
+                    .txt { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 75px; text-anchor: middle; dominant-baseline: middle; }
                 </style>
-                ${content}
+                
+                <text x="50%" y="38%" class="txt" fill="white" stroke="white" stroke-width="26" stroke-linejoin="round">${nameText}</text>
+                
+                ${lettersGroup}
+                
+                <path d="M 120 155 Q 250 180 380 155" fill="none" stroke="url(#arcoíris)" stroke-width="10" stroke-linecap="round" />
+                
+                ${particlesGroup}
             </svg>
         `.trim();
     }
@@ -107,7 +123,7 @@
         a.click();
     }
 
-    [nameInp, colorInp, styleInp].forEach(el => el.addEventListener('input', update));
+    nameInp.addEventListener('input', update);
     update();
 </script>
 
