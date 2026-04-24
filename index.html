@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer Pro</title>
+    <title>SVG Sticker Designer v6</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; color: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .app { width: 100%; max-width: 480px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #cbd5e1; }
+        .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 300px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
         .controls { display: flex; flex-direction: column; gap: 15px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 14px; font-weight: 600; color: #64748b; margin-left: 5px; }
-        input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; transition: 0.2s; }
-        input:focus, select:focus { border-color: var(--accent); }
-        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; margin-top: 10px; transition: 0.2s; }
+        label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--accent); }
+        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
         button:active { transform: scale(0.96); }
     </style>
 </head>
@@ -26,19 +26,17 @@
     <div class="controls">
         <div class="group">
             <label>Texto del Sticker</label>
-            <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="PAZ">
+            <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="ALEXANDER">
         </div>
-        
         <div class="group">
-            <label>Estilo de Letra</label>
+            <label>Tipografía</label>
             <select id="fontInp">
-                <option value="'Fredoka One', cursive">Burbuja (Fredoka)</option>
+                <option value="'Fredoka One', cursive" selected>Burbuja (Fredoka)</option>
                 <option value="'Luckiest Guy', cursive">Comic (Luckiest Guy)</option>
-                <option value="'Montserrat', sans-serif" selected>Moderno (Montserrat)</option>
+                <option value="'Montserrat', sans-serif">Moderno (Montserrat)</option>
                 <option value="'Pacifico', cursive">Cursiva (Pacifico)</option>
             </select>
         </div>
-
         <button onclick="download()">Descargar SVG</button>
     </div>
 </div>
@@ -50,21 +48,26 @@
     const colorsRainbow = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
 
     function getSVG() {
-        const nameText = nameInp.value.toUpperCase() || "PAZ";
+        const nameText = nameInp.value.toUpperCase().trim() || "PAZ";
         const selectedFont = fontInp.value;
         const letters = nameText.split('');
-        const numLetters = letters.length;
+        const n = letters.length;
         
         const svgW = 500;
         const svgH = 320;
         const centerX = svgW / 2;
         
-        // Radio masivo para curva sutil
-        const radius = 900 + (numLetters * 40);
-        const centerY = radius + 90; 
-        const fontSize = 55;
-        // Espaciado MUCHO más cerrado para que el contorno las una
-        const letterSpacing = 0.042; 
+        // --- LÓGICA DE AJUSTE DINÁMICO ---
+        // 1. Tamaño de letra decrece ligeramente con la longitud
+        const fontSize = n > 8 ? 42 : 48;
+        
+        // 2. Espaciado (Kerning) decrece para mantener la unión
+        // Si es corto (3 letras) usa 0.045, si es largo (12 letras) baja a 0.035
+        const letterSpacing = Math.max(0.035, 0.050 - (n * 0.0015));
+        
+        // 3. Radio masivo para mantener la curva sutil
+        const radius = 800 + (n * 30);
+        const centerY = radius + 95; 
 
         const defs = `
             <defs>
@@ -76,8 +79,8 @@
                     <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
                 </filter>
                 <radialGradient id="balloonGlow" cx="50%" cy="30%" r="50%">
-                    <stop offset="0%" stop-color="white" stop-opacity="0.6"/>
-                    <stop offset="70%" stop-color="white" stop-opacity="0"/>
+                    <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
+                    <stop offset="80%" stop-color="white" stop-opacity="0"/>
                 </radialGradient>
                 <linearGradient id="rainbowLine" x1="0%" y1="0%" x2="100%" y2="0%">
                     ${colorsRainbow.map((c, i) => `<stop offset="${(i/(colorsRainbow.length-1))*100}%" stop-color="${c}"/>`).join('')}
@@ -86,12 +89,13 @@
         `;
 
         let content = "";
-        const startAngle = -( (numLetters - 1) * letterSpacing ) / 2 - Math.PI/2;
+        const startAngle = -( (n - 1) * letterSpacing ) / 2 - Math.PI/2;
 
+        // Capas: Contorno -> Color -> Brillo
         const layers = [
-            { type: 'contour', stroke: 'black', width: 12, fill: 'none' }, // Contorno un poco más delgado
-            { type: 'color', stroke: 'none', width: 0, fill: 'auto' },
-            { type: 'glow', stroke: 'none', width: 0, fill: 'url(#balloonGlow)' }
+            { stroke: 'black', width: 11, fill: 'none' },
+            { stroke: 'none', width: 0, fill: 'auto' },
+            { stroke: 'none', width: 0, fill: 'url(#balloonGlow)' }
         ];
 
         layers.forEach(layer => {
@@ -117,23 +121,24 @@
             content += `</g>`;
         });
 
-        // DECORACIÓN: Más cerca del texto
-        const arcWidth = Math.min(200, (numLetters * 24) + 30);
-        const arcY = 145; // Subimos el arco (estaba en 160)
+        // DECORACIÓN: Ajustada a la nueva escala
+        const arcWidth = Math.min(220, (n * 20) + 30);
+        const arcY = 148; 
         const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 12} ${centerX + arcWidth} ${arcY}`;
 
-        // Función para estrellas con tamaño ajustable
         const drawStar = (x, y, size, rotate = 0) => {
             const s = size;
             return `<polygon points="${x},${y-s} ${x+s*0.25},${y-s*0.25} ${x+s},${y-s*0.25} ${x+s*0.4},${y+s*0.25} ${x+s*0.6},${y+s} ${x},${y+s*0.5} ${x-s*0.6},${y+s} ${x-s*0.4},${y+s*0.25} ${x-s},${y-s*0.25} ${x-s*0.25},${y-s*0.25}" 
-                     fill="#facc15" stroke="black" stroke-width="1.5" stroke-linejoin="round" transform="rotate(${rotate}, ${x}, ${y})" />`;
+                     fill="#facc15" stroke="black" stroke-width="1.2" stroke-linejoin="round" transform="rotate(${rotate}, ${x}, ${y})" />`;
         };
 
         const decorations = `
-            <path d="${arcPath}" fill="none" stroke="url(#rainbowLine)" stroke-width="7" stroke-linecap="round" />
-            ${drawStar(centerX - arcWidth - 12, arcY - 2, 7, -15)} 
-            ${drawStar(centerX - arcWidth - 22, arcY - 15, 4, -10)} ${drawStar(centerX + arcWidth + 12, arcY - 2, 7, 15)}
-            ${drawStar(centerX + arcWidth + 22, arcY - 15, 4, 10)} `;
+            <path d="${arcPath}" fill="none" stroke="url(#rainbowLine)" stroke-width="6" stroke-linecap="round" />
+            ${drawStar(centerX - arcWidth - 10, arcY - 2, 6, -15)} 
+            ${drawStar(centerX - arcWidth - 18, arcY - 12, 3.5, -10)}
+            ${drawStar(centerX + arcWidth + 10, arcY - 2, 6, 15)}
+            ${drawStar(centerX + arcWidth + 18, arcY - 12, 3.5, 10)}
+        `;
 
         return `
             <svg width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" filter="url(#stickerShadow)">
