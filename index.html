@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer v10</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
+    <title>SVG Sticker Designer v12</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
@@ -13,7 +13,7 @@
         .controls { display: flex; flex-direction: column; gap: 15px; }
         .group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
+        input { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
         button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
         button:active { transform: scale(0.96); }
     </style>
@@ -27,22 +27,12 @@
             <label>Texto del Sticker</label>
             <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="IVÁN">
         </div>
-        <div class="group">
-            <label>Tipografía</label>
-            <select id="fontInp">
-                <option value="'Fredoka One', cursive" selected>Burbuja (Fredoka)</option>
-                <option value="'Luckiest Guy', cursive">Comic (Luckiest Guy)</option>
-                <option value="'Montserrat', sans-serif">Moderno (Montserrat)</option>
-                <option value="'Pacifico', cursive">Cursiva (Pacifico)</option>
-            </select>
-        </div>
         <button onclick="download()">Descargar SVG</button>
     </div>
 </div>
 
 <script>
     const nameInp = document.getElementById('nameInp');
-    const fontInp = document.getElementById('fontInp');
     const preview = document.getElementById('preview');
     const colorsRainbow = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
 
@@ -54,7 +44,8 @@
 
     function getSVG() {
         const nameText = nameInp.value.toUpperCase().trim() || "PAZ";
-        const selectedFont = fontInp.value;
+        // Usamos una pila de fuentes de sistema ultra-compatibles
+        const systemFonts = "'Montserrat', 'Arial Black', 'Arial', sans-serif";
         const letters = nameText.split('');
         const n = letters.length;
         
@@ -66,9 +57,7 @@
         const radius = 900 + (n * 35);
         const centerY = radius + 95; 
 
-        // MANTENEMOS la separación que te gustó de la v9
         const baseTightnessFactor = Math.max(0.032, 0.044 - (n * 0.0011)); 
-        
         const charWeights = letters.map(getCharWeight);
         const totalAngle = charWeights.reduce((a, b) => a + b, 0) * baseTightnessFactor;
         const startAngle = -(totalAngle / 2) - Math.PI/2;
@@ -114,7 +103,7 @@
                 content += `
                     <text x="${x}" y="${y}" transform="rotate(${rotation}, ${x}, ${y})"
                           fill="${fillColor}" stroke="${layer.stroke}" stroke-width="${layer.width}" stroke-linejoin="round"
-                          style="font-family:${selectedFont}; font-weight:900; font-size:${fontSize}px; text-anchor:middle; dominant-baseline:middle;">
+                          style="font-family:${systemFonts}; font-weight:900; font-size:${fontSize}px; text-anchor:middle; dominant-baseline:middle;">
                         ${char}
                     </text>`;
                 currentAngle += (charWeight * baseTightnessFactor);
@@ -122,9 +111,7 @@
             content += `</g>`;
         });
 
-        // AJUSTE CLAVE: Incrementamos el multiplicador a 180 y sumamos un offset fijo de 80
-        // Esto hace que el arco sea mucho más largo que el texto.
-        const arcWidth = (totalAngle * 180) + 80; 
+        const arcWidth = (totalAngle * 180) + 85; 
         const arcY = 148; 
         const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 15} ${centerX + arcWidth} ${arcY}`;
 
@@ -153,14 +140,15 @@
 
     function update() { preview.innerHTML = getSVG(); }
     function download() {
-        const blob = new Blob([getSVG()], {type: "image/svg+xml;charset=utf-8"});
+        const svgContent = getSVG();
+        const blob = new Blob([svgContent], {type: "image/svg+xml;charset=utf-8"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url; a.download = `${nameInp.value || 'sticker'}.svg`;
         a.click();
     }
 
-    [nameInp, fontInp].forEach(el => el.addEventListener('input', update));
+    nameInp.addEventListener('input', update);
     update();
 </script>
 
