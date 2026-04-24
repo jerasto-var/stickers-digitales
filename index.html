@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer v14</title>
+    <title>SVG Sticker Designer v15</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .app { width: 100%; max-width: 480px; background: var(--card); padding: 25px; border-radius: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .preview { background: #e2e8f0; background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px); background-size: 20px 20px; border-radius: 20px; margin-bottom: 25px; min-height: 320px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
+        .preview { background: #e2e8f0; border-radius: 20px; margin-bottom: 25px; min-height: 340px; display: flex; align-items: center; justify-content: center; border: 1px solid #cbd5e1; }
         .controls { display: flex; flex-direction: column; gap: 15px; }
-        .group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        input { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
-        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
-        button:active { transform: scale(0.96); }
+        label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        input { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; width: 100%; box-sizing: border-box; outline: none; }
+        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; width: 100%; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -23,9 +21,9 @@
 <div class="app">
     <div class="preview" id="preview"></div>
     <div class="controls">
-        <div class="group">
+        <div>
             <label>Texto del Sticker</label>
-            <input type="text" id="nameInp" placeholder="Nombre..." maxlength="15" value="IVÁN">
+            <input type="text" id="nameInp" maxlength="15" value="IVÁN">
         </div>
         <button onclick="download()">Descargar SVG Final</button>
     </div>
@@ -48,13 +46,13 @@
         const letters = nameText.split('');
         const n = letters.length;
         
-        const svgW = 550; // Un poco más ancho para los nuevos adornos
-        const svgH = 340;
+        const svgW = 550;
+        const svgH = 360;
         const centerX = svgW / 2;
         
         const fontSize = n > 8 ? 42 : 48;
-        const radius = 900 + (n * 35);
-        const centerY = radius + 95; 
+        const radius = 880 + (n * 35); // Radio ligeramente menor para acercar letras
+        const centerY = radius + 105; // Ajuste de altura para compensar el acercamiento
 
         const baseTightnessFactor = Math.max(0.032, 0.044 - (n * 0.0011)); 
         const charWeights = letters.map(getCharWeight);
@@ -105,9 +103,9 @@
             content += `</g>`;
         });
 
-        // ARCO SÚPER ANCHO
-        const arcWidth = (totalAngle * 180) + 125; 
-        const arcY = 150; 
+        // Arco de abajo
+        const arcWidth = (totalAngle * 180) + 130; 
+        const arcY = 160; 
         const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 15} ${centerX + arcWidth} ${arcY}`;
 
         const drawStar = (x, y, size, rotate = 0) => {
@@ -116,10 +114,10 @@
                      fill="#facc15" stroke="black" stroke-width="1.2" stroke-linejoin="round" transform="rotate(${rotate}, ${x}, ${y})" />`;
         };
 
-        // NUEVO: LAZO ABIERTO (FILIGRANA BÉZIER)
+        // Lazo desplazado hacia ARRIBA (y - 15 en lugar de y - 5)
         const drawOpenLoop = (x, y, isRight = false) => {
             const scaleX = isRight ? 1 : -1;
-            return `<g transform="translate(${x}, ${y}) scale(${scaleX}, 1)">
+            return `<g transform="translate(${x}, ${y - 15}) scale(${scaleX}, 1)">
                 <path d="M 0 0 C 15 -10, 35 5, 25 20 C 18 30, 5 25, 8 12" 
                       fill="none" stroke="black" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
                 <circle cx="15" cy="-12" r="3" fill="#facc15" stroke="black" stroke-width="1"/>
@@ -129,13 +127,13 @@
         const decorations = `
             <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="8" stroke-linecap="round" />
             
-            ${drawOpenLoop(centerX - arcWidth, arcY - 5)}
-            ${drawOpenLoop(centerX + arcWidth, arcY - 5, true)}
+            ${drawOpenLoop(centerX - arcWidth, arcY)}
+            ${drawOpenLoop(centerX + arcWidth, arcY, true)}
 
-            ${drawStar(centerX - arcWidth - 35, arcY - 22, 6.5, -15)} 
-            ${drawStar(centerX - arcWidth - 45, arcY - 32, 3.8, -10)}
-            ${drawStar(centerX + arcWidth + 35, arcY - 22, 6.5, 15)}
-            ${drawStar(centerX + arcWidth + 45, arcY - 32, 3.8, 10)}
+            ${drawStar(centerX - arcWidth - 40, arcY - 35, 6.5, -15)} 
+            ${drawStar(centerX - arcWidth - 50, arcY - 45, 3.8, -10)}
+            ${drawStar(centerX + arcWidth + 40, arcY - 35, 6.5, 15)}
+            ${drawStar(centerX + arcWidth + 50, arcY - 45, 3.8, 10)}
         `;
 
         return `
