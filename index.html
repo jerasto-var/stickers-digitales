@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Sticker Designer v9</title>
+    <title>SVG Sticker Designer v10</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Luckiest+Guy&family=Montserrat:wght@900&family=Pacifico&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #6366f1; }
@@ -14,7 +14,8 @@
         .group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; }
         input, select { padding: 14px; border-radius: 15px; border: 2px solid #e2e8f0; font-size: 16px; outline: none; }
-        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; }
+        button { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
+        button:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
@@ -46,7 +47,7 @@
     const colorsRainbow = ['#ef4444', '#f59e0b', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6'];
 
     function getCharWeight(char) {
-        if (['I', '1', 'Í'].includes(char)) return 0.38; // Ajuste fino para la I
+        if (['I', '1', 'Í'].includes(char)) return 0.38;
         if (['M', 'W'].includes(char)) return 1.1;
         return 0.85;
     }
@@ -65,7 +66,7 @@
         const radius = 900 + (n * 35);
         const centerY = radius + 95; 
 
-        // CALIBRACIÓN V9: El punto dulce entre la v7 y la v8
+        // MANTENEMOS la separación que te gustó de la v9
         const baseTightnessFactor = Math.max(0.032, 0.044 - (n * 0.0011)); 
         
         const charWeights = letters.map(getCharWeight);
@@ -121,10 +122,11 @@
             content += `</g>`;
         });
 
-        // ARCO DECORATIVO: Proporcional a la palabra + margen fijo para que siempre sea mayor
-        const arcWidth = (totalAngle * 135) + 35; 
+        // AJUSTE CLAVE: Incrementamos el multiplicador a 180 y sumamos un offset fijo de 80
+        // Esto hace que el arco sea mucho más largo que el texto.
+        const arcWidth = (totalAngle * 180) + 80; 
         const arcY = 148; 
-        const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 12} ${centerX + arcWidth} ${arcY}`;
+        const arcPath = `M ${centerX - arcWidth} ${arcY} Q ${centerX} ${arcY - 15} ${centerX + arcWidth} ${arcY}`;
 
         const drawStar = (x, y, size, rotate = 0) => {
             const s = size;
@@ -133,11 +135,11 @@
         };
 
         const decorations = `
-            <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="6" stroke-linecap="round" />
-            ${drawStar(centerX - arcWidth - 10, arcY - 2, 5.5, -15)} 
-            ${drawStar(centerX - arcWidth - 17, arcY - 10, 3.2, -10)}
-            ${drawStar(centerX + arcWidth + 10, arcY - 2, 5.5, 15)}
-            ${drawStar(centerX + arcWidth + 17, arcY - 10, 3.2, 10)}
+            <path d="${arcPath}" fill="none" stroke="url(#yellowOrangeGrad)" stroke-width="7" stroke-linecap="round" />
+            ${drawStar(centerX - arcWidth - 12, arcY - 2, 6.5, -15)} 
+            ${drawStar(centerX - arcWidth - 21, arcY - 14, 3.8, -10)}
+            ${drawStar(centerX + arcWidth + 12, arcY - 2, 6.5, 15)}
+            ${drawStar(centerX + arcWidth + 21, arcY - 14, 3.8, 10)}
         `;
 
         return `
